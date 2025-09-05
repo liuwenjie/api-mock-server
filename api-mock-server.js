@@ -20,7 +20,7 @@ const commander = require('commander');
 const chalk = require('chalk');
 const morgan = require('morgan');
 
-class HARMockServer {
+class ApiMockServer {
   constructor(harFilePath, options = {}) {
     this.harFilePath = harFilePath;
     this.port = options.port || 3000;
@@ -706,7 +706,7 @@ program
     const absolutePath = path.resolve(harFilePath);
 
     // Create and start server
-    const server = new HARMockServer(absolutePath, {
+    const server = new ApiMockServer(absolutePath, {
       port: parseInt(options.port),
       verbose: options.verbose
     });
@@ -718,4 +718,4 @@ program
 program.parse(process.argv);
 
 // Export for programmatic use
-module.exports = HARMockServer;
+module.exports = ApiMockServer;
