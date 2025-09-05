@@ -61,3 +61,7 @@ logs
 # Temporary files
 tmp/
 temp/
+
+# Keep dashboard files
+!dashboard.html
+!dashboard.js
