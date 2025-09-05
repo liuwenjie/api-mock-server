@@ -1,10 +1,10 @@
 {
-  "name": "har-mock-server",
+  "name": "api-mock-server",
   "version": "1.0.0",
   "description": "🚀 A powerful Node.js mock server with interactive dashboard that automatically creates API mocks from HAR files",
   "main": "api-mock-server.js",
   "bin": {
-    "har-mock": "./api-mock-server.js"
+    "api-mock": "./api-mock-server.js"
   },
   "scripts": {
     "start": "node api-mock-server.js test.har",
@@ -32,16 +32,16 @@
   ],
   "author": {
     "name": "HAR Mock Server Contributors",
-    "url": "https://github.com/yourusername/har-mock-server/contributors"
+    "url": "https://github.com/liuwenjie/api-mock-server/contributors"
   },
   "license": "MIT",
-  "homepage": "https://github.com/yourusername/har-mock-server#readme",
+  "homepage": "https://github.com/liuwenjie/api-mock-server#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/har-mock-server.git"
+    "url": "git+https://github.com/liuwenjie/api-mock-server.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/har-mock-server/issues"
+    "url": "https://github.com/liuwenjie/api-mock-server/issues"
   },
   "dependencies": {
     "express": "^4.18.2",
