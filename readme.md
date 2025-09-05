@@ -113,23 +113,6 @@ Access the interactive dashboard at `http://localhost:3000/_dashboard`
 - Parameter variants count
 - Mock endpoint statistics
 
-## 🔧 Programmatic Usage
-
-```javascript
-const ApiMockServer = require('./api-mock-server');
-
-// Create server instance
-const server = new ApiMockServer('./my-api.har', {
-  port: 3000,
-  verbose: true
-});
-
-// Start the server
-server.init().then(() => {
-  console.log('Mock server is running!');
-});
-```
-
 ## 📁 HAR File Generation
 
 ### Browser DevTools
@@ -191,48 +174,6 @@ const har = {
 - Mock external service dependencies
 - Consistent test environments
 - Reproducible test scenarios
-
-## 🛠️ Advanced Configuration
-
-### Custom Response Modification
-
-```javascript
-const server = new ApiMockServer('./api.har', {
-  port: 3000,
-  responseModifier: (request, response) => {
-    // Add custom headers
-    response.headers.push({
-      name: 'X-Mock-Server',
-      value: 'API-Mock-Server'
-    });
-    return response;
-  }
-});
-```
-
-### Request Filtering
-
-```javascript
-const server = new ApiMockServer('./api.har', {
-  requestFilter: (request) => {
-    // Only mock API requests
-    return request.url.includes('/api/');
-  }
-});
-```
-
-## 📊 Project Structure
-
-```
-api-mock-server/
-├── api-mock-server.js      # Main server implementation
-├── dashboard.html          # Interactive web dashboard
-├── dashboard.js           # Dashboard JavaScript
-├── test-result.html       # API testing interface
-├── test.har              # Sample HAR file for testing
-├── package.json          # Project dependencies
-└── README.md            # This file
-```
 
 ## 📝 License
 
