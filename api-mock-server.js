@@ -129,6 +129,10 @@ class HARMockServer {
     this.app.get('/dashboard.js', (req, res) => {
       res.sendFile(path.join(__dirname, 'dashboard.js'));
     });
+    
+    this.app.get('/test-result.html', (req, res) => {
+      res.sendFile(path.join(__dirname, 'test-result.html'));
+    });
   }
 
   /**

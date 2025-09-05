@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 测试结果</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            color: #333;
+            line-height: 1.6;
+            padding: 1vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: calc(100vh - 2vh);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 400px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5vh 2vw;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: clamp(1.2rem, 3vw, 1.4rem);
+            margin-bottom: 0.5vh;
+        }
+
+        .method-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.2);
+            margin-right: 10px;
+        }
+
+        .content {
+            padding: 1.5vh 2vw;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 1vh;
+            min-height: 0;
+        }
+
+        .section {
+            background: rgba(248, 249, 250, 0.8);
+            border-radius: 10px;
+            padding: 1.5vh 1.5vw;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .section.auto-height {
+            flex: 0 0 auto;
+        }
+
+        .section.flex-height {
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            font-weight: 600;
+            margin-bottom: 1vh;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1vh 1vw;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(12px, 1.2vw, 14px);
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-y: auto;
+            line-height: 1.4;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .code-block.auto-height {
+            flex: 0 0 auto;
+            max-height: 30vh;
+            min-height: 3em;
+            height: auto;
+        }
+
+        /* 与dashboard一致的参数显示样式 */
+        .params-display {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #495057;
+            word-break: break-all;
+            white-space: normal;
+            max-height: 120px;
+            overflow-y: auto;
+            background: rgba(248, 249, 250, 0.8);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            line-height: 1.4;
+            flex: 0 0 auto;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .param-item {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .param-key {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .param-value {
+            color: #6c757d;
+            margin-left: 8px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 8px;
+                margin: 0;
+                width: 100%;
+                height: 100vh;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            .content {
+                padding: 2vh 3vw;
+                gap: 2vh;
+            }
+
+            .section {
+                padding: 2vh 3vw;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .header {
+                padding: 1vh 2vw;
+            }
+
+            .header h1 {
+                font-size: 1.2rem;
+                margin-bottom: 0.3vh;
+            }
+
+            .content {
+                padding: 1vh 2vw;
+                gap: 0.5vh;
+            }
+
+            .section {
+                padding: 1vh 1.5vw;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 API 测试结果</h1>
+            <div>
+                <span class="method-badge" id="method-badge"></span>
+                <span id="request-url"></span>
+            </div>
+        </div>
+        <div class="content">
+            <div class="section auto-height">
+                <div class="section-title">📥 请求参数</div>
+                <div id="request-params" class="params-display">正在准备请求参数...</div>
+            </div>
+            <div class="section flex-height">
+                <div class="section-title">📤 响应结果 <span id="status-badge"></span></div>
+                <div id="response-data" class="code-block loading">正在发送请求，请稍候...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后的初始化（如果需要的话）
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('API测试结果页面已加载');
+        });
+    </script>
+</body>
+
+</html>
