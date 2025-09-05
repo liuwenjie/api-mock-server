@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
+**[English](README.md) | [中文](README_zh.md)**
+
 A powerful and intuitive Node.js mock server that automatically creates API mocks from HAR (HTTP Archive) files. Perfect for frontend development, API testing, and offline development scenarios.
 
 ## ✨ Features
@@ -222,7 +224,7 @@ const server = new ApiMockServer('./api.har', {
 ## 📊 Project Structure
 
 ```
-har-mock-server/
+api-mock-server/
 ├── api-mock-server.js      # Main server implementation
 ├── dashboard.html          # Interactive web dashboard
 ├── dashboard.js           # Dashboard JavaScript
@@ -244,15 +246,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/liuwenjie/har-mock-server/issues)
-- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/liuwenjie/har-mock-server/discussions)
-- 📖 **Documentation**: [Wiki](https://github.com/liuwenjie/har-mock-server/wiki)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/liuwenjie/api-mock-server/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/liuwenjie/api-mock-server/discussions)
+- 📖 **Documentation**: [Wiki](https://github.com/liuwenjie/api-mock-server/wiki)
 
 ---
 
 <div align="center">
 
-**[⭐ Star this repo](https://github.com/liuwenjie/har-mock-server)** if you find it useful!
+**[⭐ Star this repo](https://github.com/liuwenjie/api-mock-server)** if you find it useful!
 
 Made with ❤️ by developers, for developers.
 
