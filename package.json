@@ -1,26 +1,48 @@
 {
-  "name": "api-mock-server",
+  "name": "har-mock-server",
   "version": "1.0.0",
-  "description": "A Node.js mock server that automatically mocks API requests and responses based on HAR files",
+  "description": "🚀 A powerful Node.js mock server with interactive dashboard that automatically creates API mocks from HAR files",
   "main": "api-mock-server.js",
   "bin": {
     "har-mock": "./api-mock-server.js"
   },
   "scripts": {
-    "start": "node api-mock-server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node api-mock-server.js test.har",
+    "dev": "node api-mock-server.js test.har --verbose",
+    "demo": "node api-mock-server.js test.har --port 3000",
+    "test": "node api-mock-server.js test.har --port 3001 & sleep 2 && curl -s http://localhost:3001/api/health && pkill -f 'node api-mock-server.js'"
   },
   "keywords": [
+    "mock-server",
+    "har",
+    "http-archive",
+    "api-mocking",
+    "testing",
+    "development",
+    "frontend",
+    "backend",
+    "api-testing",
     "mock",
     "server",
-    "har",
-    "http",
-    "api",
-    "testing",
-    "development"
+    "dashboard",
+    "interactive",
+    "nodejs",
+    "express",
+    "web-development"
   ],
-  "author": "",
+  "author": {
+    "name": "HAR Mock Server Contributors",
+    "url": "https://github.com/yourusername/har-mock-server/contributors"
+  },
   "license": "MIT",
+  "homepage": "https://github.com/yourusername/har-mock-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/har-mock-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/har-mock-server/issues"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "commander": "^11.0.0",
@@ -29,6 +51,22 @@
   },
   "devDependencies": {},
   "engines": {
-    "node": ">=14.0.0"
-  }
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "files": [
+    "api-mock-server.js",
+    "dashboard.html",
+    "dashboard.js",
+    "test-result.html",
+    "test.har",
+    "README.md",
+    "LICENSE"
+  ],
+  "preferGlobal": true,
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ]
 }

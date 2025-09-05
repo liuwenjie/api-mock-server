@@ -1,109 +1,261 @@
-# HAR Mock Server
+# 🚀 HAR Mock Server
 
-A powerful Node.js mock server that automatically creates API mocks from HAR (HTTP Archive) files.
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-## Installation
+**[English](README.md) | [中文](README_zh.md)**
+
+A powerful and intuitive Node.js mock server that automatically creates API mocks from HAR (HTTP Archive) files. Perfect for frontend development, API testing, and offline development scenarios.
+
+## ✨ Features
+
+### 🎯 **Smart Request Matching**
+- **Exact Matching**: Method, URL path, query parameters, and request body
+- **Fuzzy Matching**: Pattern-based matching for dynamic URLs
+- **Parameter Variants**: Support for multiple parameter combinations
+- **POST JSON Support**: Intelligent JSON body matching and normalization
+
+### 🖥️ **Interactive Dashboard**
+- **Visual API Explorer**: Browse all available endpoints with a beautiful web interface
+- **Real-time Testing**: Test APIs directly from the dashboard
+- **Parameter Display**: View request parameters in an organized format
+- **Response Preview**: Inspect API responses with syntax highlighting
+
+### 🔧 **Developer Experience**
+- **Zero Configuration**: Works out of the box with any HAR file
+- **Hot Reloading**: Automatically detects HAR file changes
+- **Verbose Logging**: Detailed request/response logging for debugging
+- **CORS Support**: Built-in CORS handling for frontend development
+
+### 📊 **Advanced Features**
+- **Multiple HTTP Methods**: GET, POST, PUT, DELETE, PATCH support
+- **Content Type Handling**: JSON, XML, plain text, and binary data
+- **Error Simulation**: Test error scenarios with 4xx/5xx responses
+- **Request Variants**: Handle different parameter combinations for the same endpoint
+
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/liuwenjie/api-mock-server.git
+cd api-mock-server
+
+# Install dependencies
 npm install
 ```
-
-## Usage
 
 ### Basic Usage
 
 ```bash
-# Run with HAR file
-node api-mock-server.js ./path/to/your.har
+# Start with a HAR file
+node api-mock-server.js your-api.har
 
-# Specify custom port
-node api-mock-server.js ./path/to/your.har --port 8080
+# Custom port
+node api-mock-server.js your-api.har --port 8080
 
 # Enable verbose logging
-node api-mock-server.js ./path/to/your.har --verbose
+node api-mock-server.js your-api.har --verbose
 ```
+
+### 🎮 Try the Demo
+
+```bash
+# Use the included test HAR file
+node api-mock-server.js test.har
+
+# Open the dashboard
+open http://localhost:3000/_dashboard
+```
+
+## 📖 Usage Guide
 
 ### Command Line Options
 
-- `--port, -p`: Server port (default: 3000)
-- `--har, -h`: Alternative way to specify HAR file path
-- `--verbose, -v`: Enable verbose logging for debugging
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--port` | `-p` | Server port | `3000` |
+| `--har` | `-h` | HAR file path | Required |
+| `--verbose` | `-v` | Enable verbose logging | `false` |
 
-### Example
+### Examples
 
 ```bash
-# Start mock server on port 5000 with verbose logging
+# Basic usage
+node api-mock-server.js api-recording.har
+
+# Custom configuration
 node api-mock-server.js api-recording.har -p 5000 -v
+
+# Alternative syntax
+node api-mock-server.js --har api-recording.har --port 8080 --verbose
 ```
 
-## Features
+## 🎨 Dashboard Features
 
-- **Automatic Request Matching**: Matches incoming requests with HAR entries based on:
-  - HTTP method
-  - URL path
-  - Query parameters
-  - Request body (for POST/PUT requests)
-  
-- **Smart Matching**: Falls back to pattern matching if exact match isn't found
+Access the interactive dashboard at `http://localhost:3000/_dashboard`
 
-- **Full Response Replication**: Returns exact responses from HAR including:
-  - Status codes
-  - Headers
-  - Response body
-  
-- **CORS Support**: Automatically handles CORS headers
+### 📋 **API Explorer**
+- View all available endpoints organized by HTTP method
+- See parameter variants for each endpoint
+- Browse request/response examples
 
-- **Error Handling**: Graceful handling of invalid HAR files and unmatched requests
+### 🧪 **Built-in Testing**
+- Test APIs directly from the browser
+- View formatted request parameters
+- Inspect response data with syntax highlighting
+- Test different parameter combinations
 
-- **Verbose Mode**: Detailed logging for debugging
+### 📊 **Statistics**
+- Total API endpoints
+- Parameter variants count
+- Mock endpoint statistics
 
-## Programmatic Usage
+## 🔧 Programmatic Usage
 
 ```javascript
-const HARMockServer = require('./api-mock-server');
+const ApiMockServer = require('./api-mock-server');
 
-const server = new HARMockServer('./my-api.har', {
+// Create server instance
+const server = new ApiMockServer('./my-api.har', {
   port: 3000,
   verbose: true
 });
 
-server.init();
+// Start the server
+server.init().then(() => {
+  console.log('Mock server is running!');
+});
 ```
 
-## HAR File Generation
+## 📁 HAR File Generation
 
-You can generate HAR files using:
-- Chrome DevTools (Network tab → Export HAR)
-- Firefox Developer Tools
-- Postman
-- Charles Proxy
-- Any HTTP debugging proxy
+### Browser DevTools
+1. **Chrome**: DevTools → Network → Export HAR
+2. **Firefox**: Developer Tools → Network → Save All As HAR
+3. **Safari**: Web Inspector → Network → Export
 
-## Example HAR Structure
+### API Tools
+- **Postman**: Collection → Export → HAR
+- **Insomnia**: Export → HAR
+- **Charles/Whistle Proxy**: File → Export Session → HAR
 
-```json
-{
-  "log": {
-    "version": "1.2",
-    "creator": {
-      "name": "Chrome DevTools"
-    },
-    "entries": [
+### Programmatic Generation
+```javascript
+// Example: Generate HAR from API calls
+const har = {
+  log: {
+    version: "1.2",
+    creator: { name: "My App" },
+    entries: [
       {
-        "request": {
-          "method": "GET",
-          "url": "https://api.example.com/users/123",
-          "headers": [...]
+        request: {
+          method: "GET",
+          url: "http://localhost:3000/api/users",
+          headers: [],
+          queryString: []
         },
-        "response": {
-          "status": 200,
-          "headers": [...],
-          "content": {
-            "text": "{\"id\":123,\"name\":\"John\"}"
+        response: {
+          status: 200,
+          headers: [{ name: "Content-Type", value: "application/json" }],
+          content: {
+            text: JSON.stringify({ users: [] })
           }
         }
       }
     ]
   }
-}
+};
 ```
+
+## 🎯 Use Cases
+
+### 🔨 **Frontend Development**
+- Mock backend APIs during frontend development
+- Test different API response scenarios
+- Develop offline without backend dependencies
+
+### 🧪 **API Testing**
+- Create test environments with recorded API interactions
+- Simulate error conditions and edge cases
+- Performance testing with consistent responses
+
+### 📚 **API Documentation**
+- Interactive API exploration
+- Live examples with real request/response data
+- Team collaboration and API understanding
+
+### 🔄 **Integration Testing**
+- Mock external service dependencies
+- Consistent test environments
+- Reproducible test scenarios
+
+## 🛠️ Advanced Configuration
+
+### Custom Response Modification
+
+```javascript
+const server = new ApiMockServer('./api.har', {
+  port: 3000,
+  responseModifier: (request, response) => {
+    // Add custom headers
+    response.headers.push({
+      name: 'X-Mock-Server',
+      value: 'API-Mock-Server'
+    });
+    return response;
+  }
+});
+```
+
+### Request Filtering
+
+```javascript
+const server = new ApiMockServer('./api.har', {
+  requestFilter: (request) => {
+    // Only mock API requests
+    return request.url.includes('/api/');
+  }
+});
+```
+
+## 📊 Project Structure
+
+```
+api-mock-server/
+├── api-mock-server.js      # Main server implementation
+├── dashboard.html          # Interactive web dashboard
+├── dashboard.js           # Dashboard JavaScript
+├── test-result.html       # API testing interface
+├── test.har              # Sample HAR file for testing
+├── package.json          # Project dependencies
+└── README.md            # This file
+```
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- HAR specification by the [Web Performance Working Group](https://w3c.github.io/web-performance/specs/HAR/Overview.html)
+- Inspired by various mock server tools in the community
+- Built with ❤️ for the developer community
+
+## 📞 Support
+
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/liuwenjie/api-mock-server/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/liuwenjie/api-mock-server/discussions)
+- 📖 **Documentation**: [Wiki](https://github.com/liuwenjie/api-mock-server/wiki)
+
+---
+
+<div align="center">
+
+**[⭐ Star this repo](https://github.com/liuwenjie/api-mock-server)** if you find it useful!
+
+Made with ❤️ by developers, for developers.
+
+</div>
