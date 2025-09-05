@@ -1,0 +1,34 @@
+{
+  "name": "api-mock-server",
+  "version": "1.0.0",
+  "description": "A Node.js mock server that automatically mocks API requests and responses based on HAR files",
+  "main": "api-mock-server.js",
+  "bin": {
+    "har-mock": "./api-mock-server.js"
+  },
+  "scripts": {
+    "start": "node api-mock-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mock",
+    "server",
+    "har",
+    "http",
+    "api",
+    "testing",
+    "development"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "commander": "^11.0.0",
+    "chalk": "^4.1.2",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
