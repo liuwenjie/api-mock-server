@@ -125,34 +125,6 @@ node api-mock-server.js --har api-recording.har --port 8080 --verbose
 - **Insomnia**：Export → HAR
 - **Charles/Whistle Proxy**：File → Export Session → HAR
 
-### 编程式生成
-```javascript
-// 示例：从 API 调用生成 HAR
-const har = {
-  log: {
-    version: "1.2",
-    creator: { name: "My App" },
-    entries: [
-      {
-        request: {
-          method: "GET",
-          url: "http://localhost:3000/api/users",
-          headers: [],
-          queryString: []
-        },
-        response: {
-          status: 200,
-          headers: [{ name: "Content-Type", value: "application/json" }],
-          content: {
-            text: JSON.stringify({ users: [] })
-          }
-        }
-      }
-    ]
-  }
-};
-```
-
 ## 🎯 使用场景
 
 ### 🔨 **前端开发**

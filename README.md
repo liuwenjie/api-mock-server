@@ -125,34 +125,6 @@ Access the interactive dashboard at `http://localhost:3000/_dashboard`
 - **Insomnia**: Export → HAR
 - **Charles/Whistle Proxy**: File → Export Session → HAR
 
-### Programmatic Generation
-```javascript
-// Example: Generate HAR from API calls
-const har = {
-  log: {
-    version: "1.2",
-    creator: { name: "My App" },
-    entries: [
-      {
-        request: {
-          method: "GET",
-          url: "http://localhost:3000/api/users",
-          headers: [],
-          queryString: []
-        },
-        response: {
-          status: 200,
-          headers: [{ name: "Content-Type", value: "application/json" }],
-          content: {
-            text: JSON.stringify({ users: [] })
-          }
-        }
-      }
-    ]
-  }
-};
-```
-
 ## 🎯 Use Cases
 
 ### 🔨 **Frontend Development**
