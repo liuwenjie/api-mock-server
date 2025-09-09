@@ -140,18 +140,11 @@ function testAPI(method, url, postData, apiIndex, variantIndex) {
     if (method.toUpperCase() === 'POST' && postData) {
       try {
         const jsonData = JSON.parse(postData);
-        // 压缩JSON为一行显示（与dashboard列表一致）
-        const compactJson = JSON.stringify(jsonData);
-        if (compactJson.length > 200) {
-          paramsContent = compactJson.substring(0, 200) + '...';
-        } else {
-          paramsContent = compactJson;
-        }
+        // 压缩JSON为一行显示，全部显示不截断
+        paramsContent = JSON.stringify(jsonData);
       } catch (e) {
-        // 如果不是有效JSON，显示原始数据
-        paramsContent = postData.length > 200 ?
-          postData.substring(0, 200) + '...' :
-          postData;
+        // 如果不是有效JSON，显示原始数据，全部显示不截断
+        paramsContent = postData;
       }
     } else if (params.size > 0) {
       // GET请求显示URL参数（一行显示）

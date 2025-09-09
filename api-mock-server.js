@@ -589,19 +589,11 @@ class ApiMockServer {
             // POST请求显示压缩的JSON（一行显示）
             try {
               const jsonData = JSON.parse(postData);
-              // 压缩JSON为一行，并限制显示长度
-              const compactJson = JSON.stringify(jsonData);
-              if (compactJson.length > 200) {
-                // 如果JSON太长，显示前200个字符
-                displayParams = compactJson.substring(0, 200) + '...';
-              } else {
-                displayParams = compactJson;
-              }
+              // 压缩JSON为一行，全部显示不截断
+              displayParams = JSON.stringify(jsonData);
             } catch (e) {
-              // 如果不是有效JSON，显示原始数据的前200个字符
-              displayParams = postData.length > 200 ? 
-                postData.substring(0, 200) + '...' : 
-                postData;
+              // 如果不是有效JSON，显示原始数据，全部显示不截断
+              displayParams = postData;
             }
           } else if (params) {
             // GET请求显示URL参数
@@ -610,9 +602,7 @@ class ApiMockServer {
             displayParams = '无参数';
           }
 
-          const shortUrl = variant.originalUrl.length > 100 ?
-            variant.originalUrl.substring(0, 100) + '...' :
-            variant.originalUrl;
+          const shortUrl = variant.originalUrl;
 
           // 构建测试URL
           const testUrl = group.path + (params ? '?' + params : '');
@@ -652,13 +642,12 @@ class ApiMockServer {
    * Start the Express server
    */
   startServer() {
-    const targetPort = 3000; // Always use port 3000
 
     // Start the server
-    const server = this.app.listen(targetPort, () => {
+    const server = this.app.listen(this.port, () => {
       console.log(chalk.green(`\n🚀 HAR Mock Server is running!`));
-      console.log(chalk.blue(`📡 Server URL: http://localhost:${targetPort}`));
-      console.log(chalk.cyan(`📊 Dashboard: http://localhost:${targetPort}/_dashboard`));
+      console.log(chalk.blue(`📡 Server URL: http://localhost:${this.port}`));
+      console.log(chalk.cyan(`📊 Dashboard: http://localhost:${this.port}/_dashboard`));
       console.log(chalk.gray(`📁 HAR File: ${this.harFilePath}`));
       console.log(chalk.gray(`📊 Total mocked endpoints: ${this.requestMap.size}`));
       console.log(chalk.yellow(`\n⌨️  Press Ctrl+C to stop the server\n`));
@@ -667,8 +656,8 @@ class ApiMockServer {
     // Handle server startup errors
     server.on('error', (error) => {
       if (error.code === 'EADDRINUSE') {
-        console.log(chalk.red(`❌ Port ${targetPort} is already in use`));
-        console.log(chalk.yellow(`💡 Please stop the process using port ${targetPort} or use a different port`));
+        console.log(chalk.red(`❌ Port ${this.port} is already in use`));
+        console.log(chalk.yellow(`💡 Please stop the process using port ${this.port} or use a different port`));
         process.exit(1);
       } else {
         console.error(chalk.red('❌ Server startup failed:'), error.message);
