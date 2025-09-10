@@ -6,15 +6,15 @@
 
 **[English](README.md) | [中文](README_zh.md)**
 
-A powerful and intuitive Node.js mock server that automatically creates API mocks from HAR (HTTP Archive) files. Perfect for frontend development, API testing, and offline development scenarios.
+A powerful and intuitive Node.js mock server that automatically creates API mocks from HAR (HTTP Archive) files. Perfect for frontend development, API testing, and offline development scenarios. Simply provide a HAR file, and the server will create mock endpoints that match the recorded API requests.
 
 ## ✨ Features
 
-### 🎯 **Smart Request Matching**
+### 🎯 **Request Matching**
 - **Exact Matching**: Method, URL path, query parameters, and request body
-- **Fuzzy Matching**: Pattern-based matching for dynamic URLs
 - **Parameter Variants**: Support for multiple parameter combinations
-- **POST JSON Support**: Intelligent JSON body matching and normalization
+- **POST JSON Support**: Intelligent JSON body matching and normalization with recursive key sorting
+- **Query Parameter Normalization**: Consistent matching regardless of parameter order
 
 ### 🖥️ **Interactive Dashboard**
 - **Visual API Explorer**: Browse all available endpoints with a beautiful web interface
@@ -27,12 +27,15 @@ A powerful and intuitive Node.js mock server that automatically creates API mock
 - **Hot Reloading**: Automatically detects HAR file changes
 - **Verbose Logging**: Detailed request/response logging for debugging
 - **CORS Support**: Built-in CORS handling for frontend development
+- **API Groups Summary**: Clear console output showing all available endpoints and variants
 
 ### 📊 **Advanced Features**
-- **Multiple HTTP Methods**: GET, POST, PUT, DELETE, PATCH support
+- **Multiple HTTP Methods**: GET, POST, PUT, DELETE, PATCH, OPTIONS support
 - **Content Type Handling**: JSON, XML, plain text, and binary data
 - **Error Simulation**: Test error scenarios with 4xx/5xx responses
 - **Request Variants**: Handle different parameter combinations for the same endpoint
+- **Health Endpoint**: Built-in health check endpoint at `/api/health`
+- **Flexible Content Parsing**: Handles various content types with appropriate body parsers
 
 ## 🚀 Quick Start
 
