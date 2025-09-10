@@ -448,8 +448,8 @@ class ApiMockServer {
     // Try multiple matching strategies
     let matchedEntry = this.findMatchingEntry(method, pathname, normalizedQueryString, bodyText);
 
-    if (matchedEntry && !matchedEntry.isPathExists) {
-      // 找到精确匹配
+    if (matchedEntry && !matchedEntry.isPathExists && matchedEntry.response) {
+      // 找到精确匹配且有响应数据
       this.sendMockedResponse(req, res, matchedEntry);
     } else if (matchedEntry && matchedEntry.isPathExists) {
       // 路径存在但参数不匹配，返回统一响应
@@ -481,7 +481,13 @@ class ApiMockServer {
     if (matchedEntry) return matchedEntry;
 
     // 精确匹配失败，返回特殊标识用于区分路径存在但参数不匹配的情况
-    return { isPathExists: this.checkPathExists(method, pathname) };
+    // 添加一个空的response对象，避免undefined错误
+    return { 
+      isPathExists: this.checkPathExists(method, pathname),
+      response: null,
+      index: -1,
+      originalUrl: null
+    };
   }
 
   /**
@@ -576,26 +582,15 @@ class ApiMockServer {
   }
 
   /**
-   * Find entry by fuzzy matching (case insensitive, trailing slashes)
-   */
-  findByFuzzyMatch(method, pathname) {
-    const normalizedPathname = pathname.toLowerCase().replace(/\/$/, '');
-
-    for (const [key, entry] of this.requestMap.entries()) {
-      if (entry.method.toUpperCase() === method.toUpperCase()) {
-        const normalizedEntryPath = entry.path.toLowerCase().replace(/\/$/, '');
-        if (normalizedEntryPath === normalizedPathname) {
-          return entry;
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
    * Send mocked response based on HAR entry
    */
   sendMockedResponse(req, res, matchedEntry) {
+    // 确保matchedEntry和response存在
+    if (!matchedEntry || !matchedEntry.response) {
+      console.error(chalk.red(`❌ Error: Invalid matched entry or missing response data`));
+      return this.sendDefaultResponse(req, res);
+    }
+    
     const harResponse = matchedEntry.response;
 
     console.log(chalk.green(`✓ Matched: ${req.method} ${req.originalUrl} → Entry #${matchedEntry.index + 1}`));
@@ -754,10 +749,6 @@ class ApiMockServer {
     });
   }
 
-
-
-
-
   /**
    * Start the Express server
    */
@@ -770,9 +761,6 @@ class ApiMockServer {
       console.log(chalk.cyan(`📊 Dashboard: http://localhost:${this.port}/_dashboard`));
       console.log(chalk.gray(`📁 HAR File: ${this.harFilePath}`));
       console.log(chalk.gray(`📊 Total mocked endpoints: ${this.requestMap.size}`));
-      
-
-      
       console.log(chalk.yellow(`\n⌨️  Press Ctrl+C to stop the server\n`));
     });
 
