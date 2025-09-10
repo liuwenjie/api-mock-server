@@ -3,7 +3,7 @@ let apiData = [];
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function () {
-  console.log('HAR Mock Server 测试面板已加载完成');
+  console.log('HAR Mock Server Dashboard loaded');
   loadAPIData();
 });
 
