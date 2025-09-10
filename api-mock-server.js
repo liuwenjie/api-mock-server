@@ -124,12 +124,12 @@ class ApiMockServer {
     // Add dashboard routes
     this.app.get('/_dashboard', (req, res) => this.serveDashboard(req, res));
     this.app.get('/api/dashboard-data', (req, res) => this.getDashboardData(req, res));
-    
+
     // Serve static files for dashboard
     this.app.get('/dashboard.js', (req, res) => {
       res.sendFile(path.join(__dirname, 'dashboard.js'));
     });
-    
+
     this.app.get('/test-result.html', (req, res) => {
       res.sendFile(path.join(__dirname, 'test-result.html'));
     });
@@ -147,14 +147,24 @@ class ApiMockServer {
         // Parse URL to get path and query using modern URL API
         const parsedUrl = new URL(request.url);
         const basePath = parsedUrl.pathname;
-        const queryParams = parsedUrl.search.slice(1); // Remove the '?' prefix
+        const rawQueryParams = parsedUrl.search.slice(1); // Remove the '?' prefix
+
+        // 规范化查询参数顺序以确保一致性匹配
+        const normalizedQueryParams = this.sortQueryString(rawQueryParams);
 
         const requestKey = this.generateRequestKey(
           request.method,
           basePath,
-          queryParams,
+          normalizedQueryParams,
           request.postData
         );
+
+        // 检查是否已存在相同的请求键
+        if (this.requestMap.has(requestKey)) {
+          if (this.verbose) {
+            console.log(chalk.yellow(`⚠️  重复的请求键，将覆盖: ${requestKey}`));
+          }
+        }
 
         // Store the exact mapping for request matching
         this.requestMap.set(requestKey, {
@@ -164,7 +174,8 @@ class ApiMockServer {
           path: basePath,
           method: request.method,
           originalUrl: request.url,
-          queryParams: queryParams
+          queryParams: rawQueryParams, // 保留原始查询参数用于显示
+          normalizedQueryParams: normalizedQueryParams // 保存规范化后的参数用于匹配
         });
 
         // Group APIs by method and path for summary display
@@ -179,7 +190,8 @@ class ApiMockServer {
 
         // Add this variant to the group
         this.apiGroups.get(apiKey).variants.push({
-          queryParams: queryParams,
+          queryParams: rawQueryParams, // 原始查询参数用于显示
+          normalizedQueryParams: normalizedQueryParams, // 规范化参数用于匹配
           postData: request.postData,
           response: response,
           originalUrl: request.url,
@@ -188,7 +200,7 @@ class ApiMockServer {
         });
 
         if (this.verbose) {
-          console.log(chalk.gray(`📝 Mapped: ${request.method} ${basePath}${queryParams ? '?' + queryParams : ''}`));
+          console.log(chalk.gray(`📝 Mapped: ${request.method} ${basePath}${rawQueryParams ? '?' + rawQueryParams : ''}`));
         }
       } catch (error) {
         console.warn(chalk.yellow(`⚠️  Failed to parse URL: ${request.url} - ${error.message}`));
@@ -231,31 +243,72 @@ class ApiMockServer {
 
   /**
    * Normalize JSON for consistent matching
+   * 处理JSON字符串的规范化，包括多层嵌套结构
    */
   normalizeJson(jsonString) {
+    if (!jsonString || typeof jsonString !== 'string') {
+      return jsonString;
+    }
+
     try {
       const obj = JSON.parse(jsonString);
-      return JSON.stringify(this.sortObjectKeys(obj));
-    } catch {
-      return jsonString;
+      const normalized = this.sortObjectKeys(obj);
+      return JSON.stringify(normalized);
+    } catch (error) {
+      // 如果JSON解析失败，尝试清理常见的格式问题
+      try {
+        // 移除多余的空白字符
+        const cleaned = jsonString.replace(/\s+/g, ' ').trim();
+        const obj = JSON.parse(cleaned);
+        const normalized = this.sortObjectKeys(obj);
+        return JSON.stringify(normalized);
+      } catch {
+        // 如果仍然失败，返回原始字符串
+        return jsonString;
+      }
     }
   }
 
   /**
    * Recursively sort object keys for consistent JSON comparison
+   * 处理多层嵌套结构、数组、特殊值等边缘情况
    */
   sortObjectKeys(obj) {
-    if (obj === null || typeof obj !== 'object') {
+    // 处理基本类型和null
+    if (obj === null || obj === undefined) {
       return obj;
     }
 
-    if (Array.isArray(obj)) {
-      return obj.map(item => this.sortObjectKeys(item));
+    // 处理非对象类型（字符串、数字、布尔值等）
+    if (typeof obj !== 'object') {
+      return obj;
     }
 
+    // 处理Date对象
+    if (obj instanceof Date) {
+      return obj.toISOString();
+    }
+
+    // 处理数组
+    if (Array.isArray(obj)) {
+      const processedArray = obj.map(item => this.sortObjectKeys(item));
+
+      // 对于对象数组，可以考虑按某种规则排序以确保一致性
+      // 但这可能会改变业务逻辑，所以暂时保持原顺序
+      return processedArray;
+    }
+
+    // 处理普通对象
     const sortedObj = {};
-    Object.keys(obj).sort().forEach(key => {
-      sortedObj[key] = this.sortObjectKeys(obj[key]);
+
+    // 获取所有键并排序（包括不可枚举的键）
+    const keys = Object.keys(obj).sort();
+
+    keys.forEach(key => {
+      const value = obj[key];
+
+      // 递归处理值
+      sortedObj[key] = this.sortObjectKeys(value);
     });
 
     return sortedObj;
@@ -292,15 +345,57 @@ class ApiMockServer {
 
   /**
    * Sort query string parameters for consistent matching
+   * 处理各种边缘情况：参数顺序、数组参数、空值、编码等
    */
   sortQueryString(query) {
     if (!query) return '';
-    const params = querystring.parse(query);
-    const sortedParams = Object.keys(params).sort().map(key => {
-      return `${key}=${params[key]}`;
-    });
-    return sortedParams.join('&');
+
+    try {
+      // 先解码URL编码的字符，然后重新解析
+      const decodedQuery = decodeURIComponent(query);
+      const params = querystring.parse(decodedQuery);
+      const sortedParams = [];
+
+      // 按键名排序处理参数
+      Object.keys(params).sort().forEach(key => {
+        const value = params[key];
+
+        if (Array.isArray(value)) {
+          // 处理数组参数（如 ?tags=a&tags=b）
+          value.sort().forEach(v => {
+            sortedParams.push(`${key}=${v || ''}`);
+          });
+        } else {
+          // 处理单个参数，包括空值情况
+          sortedParams.push(`${key}=${value || ''}`);
+        }
+      });
+
+      return sortedParams.join('&');
+    } catch (error) {
+      // 如果解析失败，尝试简单的字符串处理
+      if (this.verbose) {
+        console.warn('查询字符串解析失败，使用简单排序:', error.message);
+      }
+      return this.fallbackSortQuery(query);
+    }
   }
+
+  /**
+   * 备用查询字符串排序方法
+   */
+  fallbackSortQuery(query) {
+    if (!query) return '';
+
+    return query
+      .split('&')
+      .map(param => param.trim())
+      .filter(param => param.length > 0)
+      .sort()
+      .join('&');
+  }
+
+
 
   /**
    * Handle incoming requests and match with HAR entries
@@ -309,7 +404,10 @@ class ApiMockServer {
     const method = req.method;
     // Use req.originalUrl to get the complete path including query
     const fullUrl = req.originalUrl;
-    const [pathname, queryString] = fullUrl.split('?');
+    const [pathname, rawQueryString] = fullUrl.split('?');
+
+    // 规范化查询字符串以确保参数顺序不影响匹配
+    const normalizedQueryString = rawQueryString ? this.sortQueryString(rawQueryString) : '';
 
     console.log(chalk.blue(`🔍 Incoming: ${method} ${fullUrl}`));
 
@@ -319,9 +417,10 @@ class ApiMockServer {
       if (Buffer.isBuffer(req.body)) {
         bodyText = req.body.toString();
       } else if (typeof req.body === 'object' && req.body !== null) {
-        // For JSON objects, normalize the key order to match HAR format
+        // For JSON objects, use the same normalization as HAR processing
         try {
-          bodyText = JSON.stringify(req.body, Object.keys(req.body).sort());
+          const normalizedBody = this.sortObjectKeys(req.body);
+          bodyText = JSON.stringify(normalizedBody);
         } catch {
           bodyText = JSON.stringify(req.body);
         }
@@ -330,26 +429,38 @@ class ApiMockServer {
       }
     }
 
-    console.log(chalk.blue(`🔍 Matching: ${method} ${pathname}${queryString ? '?' + queryString : ''}`));
+    console.log(chalk.blue(`🔍 Matching: ${method} ${pathname}${normalizedQueryString ? '?' + normalizedQueryString : ''}`));
     if (this.verbose && bodyText) {
       console.log(chalk.gray(`📝 Request body: ${bodyText.substring(0, 200)}${bodyText.length > 200 ? '...' : ''}`));
+
+      // 显示JSON规范化信息
+      if (bodyText.startsWith('{') || bodyText.startsWith('[')) {
+        const normalizedBody = this.normalizeJson(bodyText);
+        if (normalizedBody !== bodyText) {
+          console.log(chalk.gray(`🔄 JSON normalized for matching`));
+        }
+      }
+    }
+    if (this.verbose && rawQueryString && rawQueryString !== normalizedQueryString) {
+      console.log(chalk.gray(`🔄 Query normalized: ${rawQueryString} → ${normalizedQueryString}`));
     }
 
     // Try multiple matching strategies
-    let matchedEntry = this.findMatchingEntry(method, pathname, queryString || '', bodyText);
+    let matchedEntry = this.findMatchingEntry(method, pathname, normalizedQueryString, bodyText);
 
-    if (matchedEntry) {
+    if (matchedEntry && !matchedEntry.isPathExists) {
+      // 找到精确匹配
       this.sendMockedResponse(req, res, matchedEntry);
+    } else if (matchedEntry && matchedEntry.isPathExists) {
+      // 路径存在但参数不匹配，返回统一响应
+      this.sendDefaultResponse(req, res);
     } else {
-      console.log(chalk.yellow(`⚠️  No match found for: ${method} ${pathname}${queryString ? '?' + queryString : ''}`));
-      console.log(chalk.gray(`📊 Available endpoints: ${this.requestMap.size}`));
-      if (this.verbose) {
-        console.log(chalk.gray('🔍 Available request keys:'));
-        Array.from(this.requestMap.keys()).slice(0, 5).forEach(key => {
-          console.log(chalk.gray(`  - ${key}`));
-        });
-      }
-      this.handleNotFound(req, res, method, pathname, queryString || '');
+      // 路径不存在，返回404
+      console.log(chalk.yellow(`⚠️  路径不存在: ${method} ${pathname}${rawQueryString ? '?' + rawQueryString : ''}`));
+      
+
+      
+      this.handleNotFound(req, res, method, pathname, rawQueryString || '');
     }
   }
 
@@ -369,50 +480,56 @@ class ApiMockServer {
     let matchedEntry = this.requestMap.get(requestKey);
     if (matchedEntry) return matchedEntry;
 
-    // 精确匹配失败，不再尝试模糊匹配，直接返回null
-    // 这确保了所有请求参数都必须精确匹配
-    return null;
+    // 精确匹配失败，返回特殊标识用于区分路径存在但参数不匹配的情况
+    return { isPathExists: this.checkPathExists(method, pathname) };
   }
 
   /**
-   * Handle 404 responses with better error information
+   * 检查路径是否存在（不考虑参数）
+   */
+  checkPathExists(method, pathname) {
+    const apiKey = `${method}:${pathname}`;
+    return this.apiGroups.has(apiKey);
+  }
+
+  /**
+   * 发送默认响应（路径存在但参数不匹配时）
+   */
+  sendDefaultResponse(req, res) {
+    const defaultResponse = {
+      code: 200,
+      msg: "成功",
+      timestamp: new Date().toISOString(),
+      data: []
+    };
+
+    res.status(200).json(defaultResponse);
+
+    if (this.verbose) {
+      console.log(chalk.green(`✅ 返回默认响应: ${req.method} ${req.originalUrl}`));
+    }
+  }
+
+  /**
+   * Handle 404 responses for non-existent paths
    */
   handleNotFound(req, res, method, pathname, queryString) {
-    // 查找相同路径的可用变体
-    const apiKey = `${method}:${pathname}`;
-    const availableVariants = [];
-    
-    if (this.apiGroups.has(apiKey)) {
-      const group = this.apiGroups.get(apiKey);
-      availableVariants.push(...group.variants.map(v => ({
-        parameters: v.params || '无参数',
-        url: v.originalUrl
-      })));
-    }
-
     const errorResponse = {
-      error: 'No exact matching request found in HAR file',
-      message: '请求参数必须精确匹配HAR文件中的记录',
+      error: 'Endpoint not found',
+      message: '请求的路径不存在',
       requested: {
         method,
         path: pathname,
         query: queryString || null,
         timestamp: new Date().toISOString()
       },
-      availableVariants: availableVariants.length > 0 ? availableVariants : null,
       availableEndpoints: this.getAvailableEndpoints()
     };
 
     res.status(404).json(errorResponse);
 
     if (this.verbose) {
-      console.log(chalk.yellow(`⚠️  精确匹配失败: ${method} ${pathname}${queryString ? '?' + queryString : ''}`));
-      if (availableVariants.length > 0) {
-        console.log(chalk.cyan('   可用的参数变体:'));
-        availableVariants.forEach(variant => {
-          console.log(chalk.cyan(`   - ${variant.url}`));
-        });
-      }
+      console.log(chalk.red(`❌ 路径不存在: ${method} ${pathname}${queryString ? '?' + queryString : ''}`));
     }
   }
 
@@ -430,6 +547,10 @@ class ApiMockServer {
     }
     return endpoints.slice(0, 10); // Limit to first 10 for readability
   }
+
+
+
+
 
   /**
    * Find entry by path pattern (supports simple wildcards)
@@ -578,9 +699,10 @@ class ApiMockServer {
         method: group.method,
         path: group.path,
         variants: group.variants.map(variant => {
-          const params = variant.queryParams || '';
+          const originalParams = variant.queryParams || '';
+          const normalizedParams = variant.normalizedQueryParams || '';
           const postData = variant.postData && variant.postData.text ? variant.postData.text : '';
-          
+
           // 根据请求类型显示不同的参数信息
           let displayParams;
           if (group.method.toUpperCase() === 'POST' && postData) {
@@ -593,18 +715,18 @@ class ApiMockServer {
               // 如果不是有效JSON，显示原始数据，全部显示不截断
               displayParams = postData;
             }
-          } else if (params) {
-            // GET请求显示URL参数
-            displayParams = params;
+          } else if (originalParams) {
+            // GET请求显示原始URL参数（用于显示）
+            displayParams = originalParams;
           } else {
             displayParams = '无参数';
           }
 
           const shortUrl = variant.originalUrl;
 
-          // 构建测试URL
-          const testUrl = group.path + (params ? '?' + params : '');
-          
+          // 构建测试URL - 使用规范化后的参数确保能匹配到数据
+          const testUrl = group.path + (normalizedParams ? '?' + normalizedParams : '');
+
           // 使用base64编码来安全传递JSON数据
           const encodedPostData = postData ? btoa(unescape(encodeURIComponent(postData))) : '';
 
@@ -648,6 +770,9 @@ class ApiMockServer {
       console.log(chalk.cyan(`📊 Dashboard: http://localhost:${this.port}/_dashboard`));
       console.log(chalk.gray(`📁 HAR File: ${this.harFilePath}`));
       console.log(chalk.gray(`📊 Total mocked endpoints: ${this.requestMap.size}`));
+      
+
+      
       console.log(chalk.yellow(`\n⌨️  Press Ctrl+C to stop the server\n`));
     });
 
