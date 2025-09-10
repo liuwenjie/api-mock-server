@@ -357,42 +357,20 @@ class ApiMockServer {
    * Find matching entry using multiple strategies
    */
   findMatchingEntry(method, pathname, queryString, bodyText) {
-    // Strategy 1: Exact match with body
+    // Strategy 1: Exact match with body (for POST/PUT/PATCH requests)
     if (bodyText) {
       let requestKey = this.generateRequestKey(method, pathname, queryString, { text: bodyText });
       let matchedEntry = this.requestMap.get(requestKey);
       if (matchedEntry) return matchedEntry;
     }
 
-    // Strategy 2: Match without body
+    // Strategy 2: Exact match without body (for GET/DELETE requests)
     let requestKey = this.generateRequestKey(method, pathname, queryString, null);
     let matchedEntry = this.requestMap.get(requestKey);
     if (matchedEntry) return matchedEntry;
 
-    // Strategy 3: Match without query parameters (return first variant)
-    requestKey = this.generateRequestKey(method, pathname, '', null);
-    matchedEntry = this.requestMap.get(requestKey);
-    if (matchedEntry) return matchedEntry;
-
-    // Strategy 4: Find by API group (return first variant)
-    const apiKey = `${method}:${pathname}`;
-    if (this.apiGroups.has(apiKey)) {
-      const group = this.apiGroups.get(apiKey);
-      if (group.variants.length > 0) {
-        // Return the first variant's data
-        const firstVariant = group.variants[0];
-        return this.requestMap.get(firstVariant.requestKey);
-      }
-    }
-
-    // Strategy 5: Flexible pattern matching
-    matchedEntry = this.findByPathPattern(method, pathname);
-    if (matchedEntry) return matchedEntry;
-
-    // Strategy 6: Fuzzy matching (case insensitive, ignore trailing slashes)
-    matchedEntry = this.findByFuzzyMatch(method, pathname);
-    if (matchedEntry) return matchedEntry;
-
+    // 精确匹配失败，不再尝试模糊匹配，直接返回null
+    // 这确保了所有请求参数都必须精确匹配
     return null;
   }
 
@@ -400,21 +378,41 @@ class ApiMockServer {
    * Handle 404 responses with better error information
    */
   handleNotFound(req, res, method, pathname, queryString) {
+    // 查找相同路径的可用变体
+    const apiKey = `${method}:${pathname}`;
+    const availableVariants = [];
+    
+    if (this.apiGroups.has(apiKey)) {
+      const group = this.apiGroups.get(apiKey);
+      availableVariants.push(...group.variants.map(v => ({
+        parameters: v.params || '无参数',
+        url: v.originalUrl
+      })));
+    }
+
     const errorResponse = {
-      error: 'No matching request found in HAR file',
+      error: 'No exact matching request found in HAR file',
+      message: '请求参数必须精确匹配HAR文件中的记录',
       requested: {
         method,
         path: pathname,
         query: queryString || null,
         timestamp: new Date().toISOString()
       },
+      availableVariants: availableVariants.length > 0 ? availableVariants : null,
       availableEndpoints: this.getAvailableEndpoints()
     };
 
     res.status(404).json(errorResponse);
 
     if (this.verbose) {
-      console.log(chalk.yellow(`⚠️  No match for: ${method} ${pathname}${queryString ? '?' + queryString : ''}`));
+      console.log(chalk.yellow(`⚠️  精确匹配失败: ${method} ${pathname}${queryString ? '?' + queryString : ''}`));
+      if (availableVariants.length > 0) {
+        console.log(chalk.cyan('   可用的参数变体:'));
+        availableVariants.forEach(variant => {
+          console.log(chalk.cyan(`   - ${variant.url}`));
+        });
+      }
     }
   }
 
